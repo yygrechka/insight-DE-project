@@ -12,8 +12,8 @@ with open('../.gitignore/userpass.txt','r') as input:
 	user_ = input.readline().strip()
 	pass_ = input.readline().strip()
 
-
-producer = KafkaProducer(bootstrap_servers=['172.31.0.199:9092'])
+#9092
+producer = KafkaProducer(bootstrap_servers=['172.31.0.199'])
 
 
 auth_response = requests.get('http://webrates.truefx.com/rates/connect.html?u=' + user_ + '&p=' + pass_ + '&q=eurates&c=EUR/USD&f=csv&s=n')
