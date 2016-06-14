@@ -31,11 +31,12 @@ while True:
         #producer.send('FX_test', bytes(fx_response.text,'utf-8'))
         to_send = fx_response.text.strip().split(',')
         v1 = int(to_send[1])
+        hr = v1 // 3600 // 1000
         v2 = (to_send[2])
         v3 = to_send[3]
         v4 = float(v2 + v3)
 	
-        json_dict = {'ts':v1, 'p':v4}
+        json_dict = {'hour': hr, 'time':v1, 'price':v4}
         json_dump = json.dumps(json_dict)
         if v1 != last_ts:
                 producer.send('FX_test', bytes(json_dump, 'utf-8'))
