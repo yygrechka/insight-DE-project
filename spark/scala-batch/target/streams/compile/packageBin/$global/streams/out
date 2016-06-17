@@ -1,0 +1,15 @@
+[0m[[0minfo[0m] [0mPackaging /home/ubuntu/insight-DE-project/spark/scala-batch/target/scala-2.10/stream_example_2.10-1.0.jar ...[0m
+[0m[[0mdebug[0m] [0mInput file mappings:[0m
+[0m[[0mdebug[0m] [0m	price_data$$anonfun$1.class[0m
+[0m[[0mdebug[0m] [0m	  /home/ubuntu/insight-DE-project/spark/scala-batch/target/scala-2.10/classes/price_data$$anonfun$1.class[0m
+[0m[[0mdebug[0m] [0m	price_data$$anonfun$get_area$1.class[0m
+[0m[[0mdebug[0m] [0m	  /home/ubuntu/insight-DE-project/spark/scala-batch/target/scala-2.10/classes/price_data$$anonfun$get_area$1.class[0m
+[0m[[0mdebug[0m] [0m	price_data.class[0m
+[0m[[0mdebug[0m] [0m	  /home/ubuntu/insight-DE-project/spark/scala-batch/target/scala-2.10/classes/price_data.class[0m
+[0m[[0mdebug[0m] [0m	price_data$.class[0m
+[0m[[0mdebug[0m] [0m	  /home/ubuntu/insight-DE-project/spark/scala-batch/target/scala-2.10/classes/price_data$.class[0m
+[0m[[0mdebug[0m] [0m	price_data$$anonfun$main$1.class[0m
+[0m[[0mdebug[0m] [0m	  /home/ubuntu/insight-DE-project/spark/scala-batch/target/scala-2.10/classes/price_data$$anonfun$main$1.class[0m
+[0m[[0mdebug[0m] [0m	price_data$$anonfun$get_area$2.class[0m
+[0m[[0mdebug[0m] [0m	  /home/ubuntu/insight-DE-project/spark/scala-batch/target/scala-2.10/classes/price_data$$anonfun$get_area$2.class[0m
+[0m[[0minfo[0m] [0mDone packaging.[0m
