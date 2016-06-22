@@ -9,6 +9,10 @@ import scala.math.signum
 import scala.math.max
 import org.apache.spark.sql.cassandra.CassandraSQLContext
 import scala.collection.JavaConversions._
+import scala.collection.mutable.{HashMap => MMap}
+import scala.collection.mutable.HashSet
+import scala.collection.mutable.TreeSet
+import scala.util.control.Breaks.break
 
 object price_data {
 
@@ -59,6 +63,7 @@ object price_data {
             relValues.append(timestamps(ii))
             relPrices.append(prices(ii))
         }
+
         val lll = lastInd - firstInd
         relPrices(lll) = relPrices(lll) - (relPrices(lll) - relPrices(lll-1)) / (relValues(lll) - relValues(lll-1)) * (relValues(lll) - t2_)
         relValues(lll) = t2_
@@ -107,15 +112,18 @@ object price_data {
         //    priceArray.foreach(println)
         //    println(get_area(0,1000,0,.0001,indArray,tsArray,priceArray))
 
-            arrayHolder.append((a,tsArray,indArray,priceArray))
+            arrayHolder.append((a,indArray,tsArray,priceArray))
         }
         val anchorRDD = sc.parallelize(arrayHolder)
+        var count = 0
+        
+        var hTree = new FXHashTree(3,9)
         while (true){
-            var last_ts_rdd : java.lang.Long = cc.sql("SELECT * FROM playground.last_ts").map(a => a(1)).first.asInstanceOf[Long]
+            var last_ts_rdd : java.lang.Long = cc.sql("SELECT * FROM playground.last_ts").map(a => a(1)).first.asInstanceOf[Long] - count // this is to test while new prices aren't being updated
             println(last_ts_rdd)
             val hour = last_ts_rdd / (1000*3600)
             val mintime = last_ts_rdd - 60000
-            val start_stop_rows = cc.sql("SELECT prev_time, time, prev_price, price FROM playground.demo_week3 WHERE hour = " + hour.toString + " and time > " + mintime.toString ).map(a=> (a(0).asInstanceOf[Long], a(1).asInstanceOf[Long], a(2).asInstanceOf[Double], a(3).asInstanceOf[Double]))
+            val start_stop_rows = cc.sql("SELECT prev_time, time, prev_price, price FROM playground.demo_week3 WHERE hour = " + hour.toString + " and time > " + mintime.toString + " and time <=" + last_ts_rdd ).map(a=> (a(0).asInstanceOf[Long], a(1).asInstanceOf[Long], a(2).asInstanceOf[Double], a(3).asInstanceOf[Double]))
             val first_ts = start_stop_rows.map(a => a._1).first
             val first_price = start_stop_rows.map(a => a._3).first
             println(first_price)
@@ -130,15 +138,61 @@ object price_data {
                  //println(arrayHolder(0)._4)
              //    println(get_area(k(aa)._1,k(aa)._2,k(aa)._3,k(aa)._4,arrayHolder(0)._3,arrayHolder(0)._2,arrayHolder(0)._4))
             //}
+/*            arrayHolder(0)._2.foreach(println)
+            println("____________")
+            arrayHolder(0)._3.foreach(println)
+            println("____________")
+            arrayHolder(0)._4.foreach(println)
+            println("____________")
+            */
+            val b_ = normalized_rdd.collect()
+           /* println(b_(0)._1)
+            println(b_(0)._2)
+            println(b_(0)._3)
+            println(b_(0)._4) */
+          /*  for (j <- 0 to 8){
+
+                println(j)
+                println(arrayHolder(j)._3.length)
+            for ( i <- 0 to b_.length - 1){
+            println(b_(i))
+            println(get_area(b_(i)._1, b_(i)._2, b_(i)._3, b_(i)._4,arrayHolder(j)._2, arrayHolder(j)._3,arrayHolder(j)._4))
+            println("---------------")
+}
+        }*/
             //normalized_rdd.map(a => get_area(a._1,a._2,a._3,a._4,arrayHolder(0)._2,arrayHolder(0)._3,arrayHolder(0)._4)).collect().foreach(println)
+            
+            //normalized_rdd.collect.foreach(println)
+            
+            // the next three lines should represent the core functionality
             val cart_product = anchorRDD.cartesian(normalized_rdd)
-//            cart_product.collect.foreach(println)
-            val sum_distance = cart_product.map(a => (a._1._1, get_area(a._2._1,a._2._2,a._2._3,a._2._4,a._1._2,a._1._3,a._1._4))).reduceByKey((a,b) => a + b)
-            sum_distance.collect.foreach(println)
+            val sum_distance = cart_product.map(a => (a._1._1, get_area(a._2._1,a._2._2,a._2._3,a._2._4,a._1._2,a._1._3,a._1._4))).reduceByKey((a,b) => a + b).sortBy(_._2)
+//            sum_distance.collect.foreach(println)
+            
+//            count += 1000
+            //Thread sleep(1000)
 
-           // start_stop_rows.toArray.foreach(println)
-            Thread sleep(1000)
+            val permutation = sum_distance.map(a => a._1).toArray
+         //   val testRDD_ = sc.parallelize(Array((1,first_ts, permutation)))
+         //   testRDD_.saveToCassandra("playground", "ts_permutation")
+            val collection = sc.parallelize(Array((hour, last_ts_rdd, permutation(0), permutation(1), permutation(2), permutation(3), permutation(4), permutation(5), permutation(6), permutation(7), permutation(8))))
+            collection.saveToCassandra("playground","ts_permutation",SomeColumns("day", "ts", "p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9"))
 
+            println(permutation.getClass)
+            permutation.foreach(println)
+            val dp = new DataPoint(first_ts,9)
+            dp.permutation = permutation
+            if (hTree.size > 1){
+                println("nearest ts")
+                val nn = hTree.get(dp)
+                val dummyArray : Array[(Int,Long)]  = Array((1,nn))
+                val dummyRDD = sc.parallelize(dummyArray)
+                dummyRDD.saveToCassandra("playground","nn_ts")
+                println("___________")
+            }
+            hTree.put(dp)
+            
+            hTree.print()
             
         }
 
@@ -152,4 +206,119 @@ object price_data {
 }
 
 
+class DataPoint(val timestamp : Long, anchorNum : Int){
+    var permutation = new Array[Int](anchorNum)
+    // need to call fillPermutation
+    //def fillPermulation()  {
+
+    //}
+}
+
+class Node(level : Int){
+    val hashValues = MMap.empty[Int,Node]
+    var pointArray = ArrayBuffer.empty[DataPoint]
+}
+
+class AnchorContext(){
+
+}
+
+class FXHashTree(maxelem : Int, maxdepth: Int){
+    val root = new Node(0)
+    var size = 0
+    var existing_ts = HashSet.empty[Long]
+
+    def put(dp : DataPoint){
+        if (existing_ts.contains(dp.timestamp)) {
+            return
+        }
+        size += 1
+        existing_ts += dp.timestamp
+        this._put(root,dp,0)
+    }
+
+    def _put(cnode : Node, dp : DataPoint, level : Int) {
+        if (level == maxdepth){
+            cnode.pointArray += dp
+            return 
+        }
+        var nextValue = dp.permutation(level)
+        val hashSize = cnode.hashValues.size
+        if (hashSize > 0){
+            if (cnode.hashValues.contains(nextValue)){
+                _put(cnode.hashValues(nextValue), dp, level+1)
+            } else {
+                cnode.hashValues(nextValue) = new Node(level)
+                cnode.hashValues(nextValue).pointArray += dp
+            }
+        } else if (cnode.pointArray.length < maxelem) {
+            cnode.pointArray += dp
+        } else {
+            cnode.hashValues(nextValue) = new Node(level)
+            cnode.hashValues(nextValue).pointArray += dp
+            cnode.pointArray.foreach((ii : DataPoint) => _put(cnode,ii,level))
+            cnode.pointArray = ArrayBuffer.empty[DataPoint]
+        }
+    }
+
+    def get(dp : DataPoint) : Long = {
+        var myTreeSet = TreeSet.empty[(Int,Int)]
+        val md = maxdepth - 1
+        for ( a <- 0 to md)  {
+            myTreeSet += ((a,dp.permutation(a)))
+        }
+        return _get(root, myTreeSet, (0,0))
+    }
+
+    def _get(cnode : Node, currentTree : TreeSet[(Int,Int)],parentComb : (Int,Int)) : Long = {
+        val hashSize = cnode.hashValues.size
+        println(hashSize)
+        if (hashSize > 0)  {
+            var minV : (Int,Int) = (-1,-1)
+            var found = false;
+            for (vv <- currentTree){
+                if (!found){
+                    if (cnode.hashValues.contains(vv._2)){
+                        minV = vv
+                        found = true;
+                    }
+                }
+            }
+            currentTree -= minV     
+            return _get(cnode.hashValues(minV._2), currentTree, minV)
+        } else {
+            println("****")
+            println(parentComb._1)
+            println(parentComb._2)
+            println(cnode.pointArray.length)
+            return cnode.pointArray(0).timestamp
+        }
+        
+
+
+    }
+
+    def print(){
+        _print(root,0,0)
+    }
+    
+    def _print(cnode: Node, level: Int, parent : Int){
+        if (cnode.hashValues.size > 0){
+            println(level)
+            println(parent)
+            println("***")
+            cnode.hashValues.foreach( kv => _print(cnode.hashValues(kv._1), level + 1,kv._1))
+        }else {
+            println(level)
+            println(parent)
+            println(cnode.pointArray.length)
+            println("-----")
+        }
+    }
+
+
+
+
+
+}
 

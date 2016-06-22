@@ -20,3 +20,8 @@ mergeStrategy in assembly := {
   case "reference.conf"                                    => MergeStrategy.concat
   case _                                                   => MergeStrategy.first
 }
+
+
+libraryDependencies ++= Seq(
+    "net.debasishg" %% "redisclient" % "3.0"
+    )

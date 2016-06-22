@@ -23,6 +23,7 @@ id_string = auth_response.text.strip()
 
 c=0
 last_ts = 0
+last_price = 0
 	
 while True:
         fx_response = requests.get(website + '?id=' + id_string)
@@ -36,9 +37,12 @@ while True:
         v3 = to_send[3]
         v4 = float(v2 + v3)
 	
-        json_dict = {'hour': hr, 'time':v1, 'price':v4}
+        json_dict = {'hour': hr, 'time':v1, 'prev_time':last_ts, 'price':v4, 'prev_price': last_price, 'const':1}
         json_dump = json.dumps(json_dict)
-        if v1 != last_ts:
-                producer.send('FX_test', bytes(json_dump, 'utf-8'))
+        if v1 != last_ts :
+                if last_ts != 0:
+                    producer.send('FX_test', bytes(json_dump, 'utf-8'))
+        #        print(last_ts)
                 last_ts = v1
+                last_price = v4
         time.sleep(.1)

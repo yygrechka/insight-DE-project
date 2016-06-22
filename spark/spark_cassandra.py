@@ -16,7 +16,9 @@ brokers, topic = sys.argv[1:]
 directKafkaStream = KafkaUtils.createStream(ssc, brokers,"spark-streaming-consumer", {topic:1})
 line = directKafkaStream.map(lambda x: json.loads(x[1]))
 #print line
-line.saveToCassandra('playground','demo_table')
+line.saveToCassandra('playground','demo_week3')
+line.saveToCassandra('playground','last_ts')
+
 #line.pprint()
 
 #lines = directKafkaStream.map(lambda x : x[1])

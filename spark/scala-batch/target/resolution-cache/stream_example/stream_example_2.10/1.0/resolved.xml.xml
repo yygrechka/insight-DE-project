@@ -4,7 +4,7 @@
 		module="stream_example_2.10"
 		revision="1.0"
 		status="integration"
-		publication="20160617121925"
+		publication="20160619160226"
 	>
 		<description>
 		stream_example
@@ -39,5 +39,6 @@
 		<dependency org="org.apache.spark" name="spark-sql_2.10" rev="1.6.1" conf="provided->default(compile)"/>
 		<dependency org="org.apache.spark" name="spark-streaming_2.10" rev="1.6.1" conf="provided->default(compile)"/>
 		<dependency org="org.apache.spark" name="spark-streaming-kafka_2.10" rev="1.6.1" conf="compile->default(compile)"/>
+		<dependency org="net.debasishg" name="redisclient_2.10" rev="3.0" conf="compile->default(compile)"/>
 	</dependencies>
 </ivy-module>
