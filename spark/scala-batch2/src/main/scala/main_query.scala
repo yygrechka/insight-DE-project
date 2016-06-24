@@ -14,10 +14,11 @@ import scala.collection.mutable.{HashMap => MMap}
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.TreeSet
 import scala.util.control.Breaks.break
+import scala.util.Sorting
 
 object price_data {
 
-    def get_area(timestamps1 : ArrayBuffer[Long], timestamps2 : ArrayBuffer[Long], prices1 : ArrayBuffer[Double], prices2 : ArrayBuffer[Double]) : Double = {
+    def get_area(timestamps1 : Array[Int], timestamps2 : Array[Int], prices1 : Array[Double], prices2 : Array[Double]) : Double = {
         // the first element is assumed to be 0
         val l1 = timestamps1.length
         val l2 = timestamps2.length
@@ -38,10 +39,10 @@ object price_data {
 
         var area = 0.0
         
-        var shorterTS = ArrayBuffer.empty[Long]
-        var longerTS = ArrayBuffer.empty[Long]
-        var shorterP = ArrayBuffer.empty[Double]
-        var longerP = ArrayBuffer.empty[Double]
+        var shorterTS = Array.empty[Int]
+        var longerTS = Array.empty[Int]
+        var shorterP = Array.empty[Double]
+        var longerP = Array.empty[Double]
 
         if (isFirstLonger) {
             shorterTS = timestamps2
@@ -60,8 +61,8 @@ object price_data {
         var p1 = 0.0
         var p2 = 0.0
 
-        var cts : Long = 0
-        var cts_temp : Long = 0
+        var cts : Int = 0
+        var cts_temp : Int = 0
 
         var nts1 = shorterTS(1)
         var nts2 = longerTS(1)
@@ -116,111 +117,82 @@ object price_data {
 
 
    def main(args: Array[String]){
-        val conf = new SparkConf().setAppName("PriceDataExercise").set("spark.cassandra.connection.host", "52.26.195.153")
+        val conf = new SparkConf().setAppName("PriceDataExercise").set("spark.cassandra.connection.host", "52.41.153.121")
         val sc = new SparkContext(conf)
         val cc = new CassandraSQLContext(sc)
-//        val sqlContext = SQLContext(sc)
-        var arrayHolder = ArrayBuffer.empty[(Int,Array[Int], Array[Int], Array[Double])]
-        for (a <- 1 to 9) {
-            
-        
-            val rdd = sc.cassandraTable("playground","anchor" + a.toString)
-            
-            //println(rdd.first.get[BigInt]("ts"))
-            
+   	    val prices = sc.cassandraTable("fx","batch_table").select("price").where("batch_id = 1").map(s => s.get[Double]("price")).toArray
+	    val timestamps = sc.cassandraTable("fx","batch_table").select("ts").where("batch_id = 1").map(s => s.get[Long]("ts")).toArray
 
-            val tsArray = rdd.map(s => s.get[Int]("ts")).toArray
-            val indArray = rdd.map(s => s.get[Int]("index_")).toArray
-            val priceArray = rdd.map(s => s.get[Double]("price")).toArray
-        //    priceArray.foreach(println)
-        //    println(get_area(0,1000,0,.0001,indArray,tsArray,priceArray))
+        val num_anchors = 15
 
-            arrayHolder.append((a,indArray,tsArray,priceArray))
+        val anchorTS = new Array[Array[Int]](num_anchors)
+        val anchorP = new Array[Array[Double]](num_anchors)
+        for (i <- 0 to num_anchors - 1){
+            anchorTS(i) = sc.cassandraTable("fx","anchor_table").select("ts").where("anchor = " + i.toString).map(s => s.get[Int]("ts")).toArray
+            anchorP(i) = sc.cassandraTable("fx","anchor_table").select("price").where("anchor = " + i.toString).map(s => s.get[Double]("price")).toArray
         }
-        val anchorRDD = sc.parallelize(arrayHolder)
-        var count = 0
-        
-        val test_rows = cc.sql("SELECT time, price FROM playground.demo_week3 WHERE hour = 407354")
-        val prices = test_rows.map(a => a(1).asInstanceOf[Double]).toArray
-        val timestamps = test_rows.map(a => a(0).asInstanceOf[Long]).toArray
-        var arrayHolder = ArrayBuffer.empty[(Int,Array[Int], Array[Int], Array[Double])]
-        
-        for (a <- 1 to 9) {
+       
 
+	
 
-            val rdd = sc.cassandraTable("playground","anchor" + a.toString)
-
-            //println(rdd.first.get[BigInt]("ts"))
-
-
-            val tsArray = rdd.map(s => s.get[Int]("ts")).toArray
-            val indArray = rdd.map(s => s.get[Int]("index_")).toArray
-            val priceArray = rdd.map(s => s.get[Double]("price")).toArray
-        //    priceArray.foreach(println)
-        //    println(get_area(0,1000,0,.0001,indArray,tsArray,priceArray))
-
-            arrayHolder.append((a,indArray,tsArray,priceArray))
-        }
-        
-
-
-
-        val bpriceArray = sc.broadcast(arrayHolder)
+        //val bpriceArray = sc.broadcast(arrayHolder)
         val bprice = sc.broadcast(prices)
         val btime = sc.broadcast(timestamps)
-
-        val mtestArray = Range(150,1800)
-        val rddTest = sc.parallelize(mtestArray)
+        val banchorTS = sc.broadcast(anchorTS)
+        val banchorP = sc.broadcast(anchorP)
+        val bnanchors = sc.broadcast(num_anchors)
         
-        def ff(aa : Int) : ArrayBuffer[(Double,Int)] ={
-            val final_ = ArrayBuffer.empty[(Double,Int)]
-
-            for (aaa <- range 1 to 9){
-
-            val k = bprice.value.slice(aa-100,aa)
-            var k_ =  ArrayBuffer.fill(100)(0.0)
-            val k_0 = k(0)
-            for (ii <- 0 to k_.length -1){
-                k_(ii) = k(ii) - k_0
-            }
-            val kk = bprice.value.slice(51,151)
-            var kk_ = ArrayBuffer.fill(100)(0.0)
-            val kk_0 = kk(0)
-            
-            for (ii <- 0 to kk_.length - 1){
-                kk_(ii) = kk(ii) - kk_0
+        def ff(aa : Int) : Array[(Double,Int)] ={
+            val final_ = Array.fill[(Double,Int)](bnanchors.value)((0.0,0))
+            val lastVal = btime.value(aa)
+            var startInd = 0
+            var iii = aa
+            while (iii >= 0 && btime.value(iii) > lastVal - 3600000){
+                iii -= 1
             }
 
-
-            val t = btime.value.slice(aa-100,aa)
-            var t_ = ArrayBuffer.fill[Long](100)(0)
-            val t_0 = t(0)
-            for (ii <- 0 to kk_.length - 1){
-                t_(ii) = t(ii) - t_0
+            if (iii > -1) {
+                startInd = iii + 1
+            } else {
+                return final_
             }
-            val tt = btime.value.slice(51,151)
+            val slicedArrayTS = btime.value.slice(startInd, aa + 1)
+            val slicedArrayP = bprice.value.slice(startInd, aa + 1)           
 
-            var tt_ = ArrayBuffer.fill[Long](100)(0)
-            val tt_0 = tt(0)
-            for (ii <- 0 to tt_.length - 1){
-                tt_(ii) = tt(ii) - tt_0
+            var slicedIntArrayTS = new Array[Int](slicedArrayTS.length)
+            for (ii <- 0 to slicedArrayTS.length -1){
+                
+                slicedIntArrayTS(ii) = (slicedArrayTS(ii) - slicedArrayTS(0)).toInt
+                slicedArrayP(ii) = slicedArrayP(ii) - slicedArrayP(0)
             }
-            
-
+            for (ii <- 0 to bnanchors.value - 1){
+                val a = get_area(slicedIntArrayTS, banchorTS.value(ii), slicedArrayP, banchorP.value(ii))
+                final_(ii) = (a,ii)
             }
-            return get_area(t_,tt_,k_,kk_)
+            Sorting.quickSort(final_)
+            return final_
         }
 
 
-//        println(ff(150))
+       val rddTest = sc.parallelize(Range(0,btime.value.length-1))
+       val permutationResults = rddTest.map( 
+                    a =>{ val x = ff(a) 
+                            (btime.value(a),x(0)._2,x(1)._2,x(2)._2,x(3)._2,x(4)._2,x(5)._2,x(6)._2,x(7)._2,x(8)._2,x(9)._2,x(10)._2,x(11)._2,x(12)._2,x(13)._2,x(14)._2)}
 
-       rddTest.map( 
-                    a => (a,ff(a))
+                ) 
 
-                ).collect().foreach(println) 
+       for (a <- 0 to bnanchors.value -1){
+        permutationResults.saveToCassandra("fx","permutation_granularity_" + a.toString, SomeColumns("ts", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14"))
+       }
 
-            }
-
+            
+/*
+            for (ii <- 1 to btime.value.length-1){
+                println(ii)
+                val x = ff(ii)
+                println((timestamps(ii), x(0)._2,x(1)._2,x(2)._2))
+            } */
+        }
 
 }
 

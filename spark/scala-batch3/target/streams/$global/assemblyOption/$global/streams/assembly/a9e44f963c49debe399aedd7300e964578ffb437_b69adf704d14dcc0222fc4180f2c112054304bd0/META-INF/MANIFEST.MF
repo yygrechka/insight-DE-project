@@ -1,0 +1,43 @@
+Manifest-Version: 1.0
+Bnd-LastModified: 1453993727324
+Build-Jdk: 1.8.0_66
+Built-By: alexandredutra
+Bundle-Description: A driver for Apache Cassandra 1.2+ that works exclus
+ ively with the Cassandra Query Language version 3        (CQL3) and Cas
+ sandra's binary protocol.
+Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
+Bundle-ManifestVersion: 2
+Bundle-Name: DataStax Java Driver for Apache Cassandra - Core
+Bundle-SymbolicName: com.datastax.driver.core
+Bundle-Version: 3.0.0
+Created-By: Apache Maven Bundle Plugin
+Export-Package: com.datastax.driver.core;uses:="com.codahale.metrics,com
+ .datastax.driver.core.exceptions,com.datastax.driver.core.policies,com.
+ google.common.reflect,com.google.common.util.concurrent,io.netty.bootst
+ rap,io.netty.channel,io.netty.channel.socket,io.netty.handler.ssl,io.ne
+ tty.util,javax.net.ssl,org.slf4j";version="3.0.0",com.datastax.driver.c
+ ore.exceptions;uses:="com.datastax.driver.core,com.google.common.reflec
+ t";version="3.0.0",com.datastax.driver.core.policies;uses:="com.datasta
+ x.driver.core,com.datastax.driver.core.exceptions,com.google.common.bas
+ e";version="3.0.0",com.datastax.driver.core.querybuilder;uses:="com.dat
+ astax.driver.core,com.datastax.driver.core.policies";version="3.0.0",co
+ m.datastax.driver.core.schemabuilder;uses:="com.datastax.driver.core,co
+ m.google.common.base";version="3.0.0",com.datastax.driver.core.utils;us
+ es:="com.google.common.util.concurrent";version="3.0.0"
+Import-Package: com.google.common.base;version="[16.0.1,19)",com.google.
+ common.cache;version="[16.0.1,19)",com.google.common.collect;version="[
+ 16.0.1,19)",com.google.common.primitives;version="[16.0.1,19)",com.goog
+ le.common.reflect;version="[16.0.1,19)",com.google.common.util.concurre
+ nt;version="[16.0.1,19)",com.codahale.metrics;version="[3.1,4)",io.nett
+ y.bootstrap;version="[4.0,5)",io.netty.buffer;version="[4.0,5)",io.nett
+ y.channel;version="[4.0,5)",io.netty.channel.group;version="[4.0,5)",io
+ .netty.channel.nio;version="[4.0,5)",io.netty.channel.socket;version="[
+ 4.0,5)",io.netty.channel.socket.nio;version="[4.0,5)",io.netty.handler.
+ codec;version="[4.0,5)",io.netty.handler.ssl;version="[4.0,5)",io.netty
+ .handler.timeout;version="[4.0,5)",io.netty.util;version="[4.0,5)";reso
+ lution:=optional,io.netty.util.concurrent;version="[4.0,5)";resolution:
+ =optional,javax.naming,javax.naming.directory,javax.net.ssl,net.jpountz
+ .lz4;resolution:=optional,org.HdrHistogram;resolution:=optional,org.slf
+ 4j;version="[1.7,2)",org.xerial.snappy;version="[1.0,2)";resolution:=op
+ tional
+Tool: Bnd-2.1.0.20130426-122213

@@ -37,7 +37,7 @@ while True:
         v3 = to_send[3]
         v4 = float(v2 + v3)
 	
-        json_dict = {'hour': hr, 'time':v1, 'prev_time':last_ts, 'price':v4, 'prev_price': last_price, 'const':1}
+        json_dict = {'hour': hr, 'ts':v1, 'price':v4, 'const':1}
         json_dump = json.dumps(json_dict)
         if v1 != last_ts :
                 if last_ts != 0:
