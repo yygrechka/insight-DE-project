@@ -115,7 +115,7 @@ object price_data {
 
         }
 
-       return area / ( totalTime.toDouble )
+       return area / ( totalTime.toDouble ) * 1000
 
     }
 
