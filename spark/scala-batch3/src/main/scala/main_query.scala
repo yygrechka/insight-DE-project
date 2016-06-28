@@ -8,6 +8,7 @@ import scala.math.abs
 import scala.math.signum
 import scala.math.max
 import scala.math.min
+import scala.math.sqrt
 import org.apache.spark.sql.cassandra.CassandraSQLContext
 import scala.collection.JavaConversions._
 import scala.collection.mutable.{HashMap => MMap}
@@ -69,21 +70,27 @@ object price_data {
 
         var cslope1 = p1_temp / nts1
         var cslope2 = p2_temp / nts2
+        var prev_slope1 = 0.0
+        var prev_slope2 = 0.0
+        
+        println(p1_temp)
+        println(nts1)
 
         var indexLonger = 1
         val ll = shorterTS.length
         for (ii <- 0 to ll -2){
+            prev_slope1 = cslope1
+            cslope1 = (shorterP(ii+1) - shorterP(ii)) / (shorterTS(ii+1) - shorterTS(ii))
             while (longerTS(indexLonger) < shorterTS(ii + 1)){
-                // going from index 1 up
+                prev_slope2 = cslope2
+                cslope2 = (longerP(indexLonger+1) - longerP(indexLonger)) / (longerTS(indexLonger+1) - longerTS(indexLonger))
                 cts_temp = longerTS(indexLonger)
                 p1_temp = p1 + cslope1 * (cts_temp - cts)
                 p2_temp = longerP(indexLonger)
-                cslope2 = ( p2_temp - p2) / ( cts_temp - cts   )
-                //println(cslope1)
                 if (signum(p1_temp - p2_temp) == signum(p1 - p2)){
-                    area += .5 * (abs(p1 - p1_temp) + abs(p2 - p2_temp)) * (cts_temp - cts)
+                    area += .5 * (abs(p2_temp - p1_temp) + abs(p2 - p1)) * (cts_temp - cts)
                 }else{
-                    val midpoint = cts + abs(p1 - p2) / abs(cslope1 + cslope2)
+                    val midpoint = cts + abs(p1 - p2) / abs(cslope1 + prev_slope2)
                     area += .5 * (midpoint - cts) * abs(p1 - p2)
                     area += .5 * (cts_temp - midpoint) * abs(p1_temp - p2_temp)
                 }
@@ -92,22 +99,23 @@ object price_data {
                 cts = cts_temp
                 indexLonger += 1
             }
-            cslope2 = (longerP(indexLonger) - p2) / (longerTS(indexLonger) - cts)
             cts_temp = shorterTS(ii+1)
             p2_temp = p2 + cslope2 * (cts_temp - cts )
             p1_temp = shorterP(ii+1)
-            cslope1 = (p1_temp - p1) / (cts_temp - cts)
             if (signum(p1_temp - p2_temp) == signum(p1 - p2)){
-                area += .5 * (abs(p1 - p1_temp) + abs(p2 - p2_temp)) * (cts_temp - cts)
+                area += .5 * (abs(p2_temp - p1_temp) + abs(p2 - p1)) * (cts_temp - cts)
             }else{
                 val midpoint = cts + abs(p1 - p2) / abs(cslope1 + cslope2)
                 area += .5 * (midpoint - cts) * abs(p1 - p2)
                 area += .5 * (cts_temp - midpoint) * abs(p1_temp - p2_temp)
             }
+            cts = cts_temp;
+            p1 = p1_temp
+            p2 = p2_temp
 
         }
 
-       return area / ( totalTime.toDouble ) * 1000
+       return area / ( totalTime.toDouble )
 
     }
 
@@ -145,12 +153,12 @@ object price_data {
         while (true){
             val lastTS_ = sc.cassandraTable("fx","last_ts").select("ts").map(s => s.get[Long]("ts")).toArray
             val lastTS = lastTS_(0)
-            val lastTS__ = lastTS - 3600000
+            val lastTS__ = lastTS - 600000
             val hour_ = lastTS / 3600000
 //            println(hour_)
             val hour__ = hour_ - 1
-            val RDD_last_1 = sc.cassandraTable("fx","source_table").select("ts","price").where("hour = " + hour_.toString).where("ts <= " + lastTS.toString) 
-            val RDD_last_2 = sc.cassandraTable("fx","source_table").select("ts","price").where("hour = " + hour__.toString).where("ts > " + lastTS__.toString)
+            val RDD_last_1 = sc.cassandraTable("fx","source_table").select("ts","price").where("hour = " + hour_.toString).where("ts <= " + lastTS.toString).where("ts > " + lastTS__.toString) 
+            val RDD_last_2 = sc.cassandraTable("fx","source_table").select("ts","price").where("hour = " + hour__.toString).where("ts > " + lastTS__.toString).where("ts <= " + lastTS.toString)
             val ts1 = RDD_last_1.map(s => s.get[Long]("ts")).toArray
             val ts2 = RDD_last_2.map(s => s.get[Long]("ts")).toArray
             val p1 = RDD_last_1.map(s => s.get[Double]("price")).toArray
@@ -158,10 +166,21 @@ object price_data {
             val ts_combined = ts1 ++ ts2
             val ts_combined_int = new Array[Int](ts_combined.length)
             val p_combined = p1 ++ p2
+            
+      //      val mean_ = p_combined.sum/p_combined.length
+      //      val std_ = sqrt((p_combined.map( _ - mean_).map(t => t*t).sum)/p_combined.length)
+            val start_value = p_combined(0)
+
             for (ii <- 0 to ts_combined.length -1){
                 val x = ts_combined(ii) - ts_combined(0)
+                p_combined(ii) = (p_combined(ii) - start_value) // std_
+
                 ts_combined_int(ii) = x.toInt 
             }
+            
+            val xx = ff(ts_combined_int, p_combined)
+//            xx.foreach(println)
+//            Thread.sleep(100000)
 
             val permutation = sc.parallelize(Array(ff(ts_combined_int, p_combined))).map(x => (1,lastTS,x(0)._2,x(1)._2,x(2)._2,x(3)._2,x(4)._2,x(5)._2,x(6)._2,x(7)._2,x(8)._2,x(9)._2,x(10)._2,x(11)._2,x(12)._2,x(13)._2,x(14)._2))
             permutation.saveToCassandra("fx","last_ts_permutation", SomeColumns("const", "ts", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14"))
@@ -171,7 +190,7 @@ object price_data {
             pp2.saveToCassandra("fx","ts_to_permutation", SomeColumns("ts", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14"))
 
 
-            Thread.sleep(100)
+            Thread.sleep(1000)
 
 
         }

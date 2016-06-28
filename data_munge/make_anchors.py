@@ -1,6 +1,7 @@
 from datetime import datetime
 from cassandra.cluster import Cluster
 import sys
+import numpy as np
 
 cluster = Cluster(['52.41.153.121'])
 session = cluster.connect('fx')
@@ -31,13 +32,14 @@ for i,point in enumerate(break_points):
     start_ts[i] = list_of_ints[point]
     k = list_of_ints[point]
     index = point
-    while k < list_of_ints[point] + 3600000:
+    while k < list_of_ints[point] + 600000:
         index+=1
         k = list_of_ints[index]
     break_ends[i] = index
 
 
-
+list_of_prices = np.array(list_of_prices)
+#std__ = np.std(list_of_prices)
 
 first_part = 'BEGIN BATCH\n'
 last_part = 'APPLY BATCH;'
@@ -47,7 +49,8 @@ full_query = first_part
 for i in range(15):
     full_query = first_part
     for j in range(break_points[i],break_ends[i]):
-        full_query += middle_part.format(i,list_of_ints[j]-list_of_ints[break_points[i]],list_of_prices[j]- list_of_prices[break_points[i]])
+        std__ = np.std(list_of_prices[break_points[i]:break_ends[i]])
+        full_query += middle_part.format(i,list_of_ints[j]-list_of_ints[break_points[i]],(list_of_prices[j]- list_of_prices[break_points[i]]) )
     full_query += last_part
 
 

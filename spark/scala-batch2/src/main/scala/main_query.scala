@@ -15,6 +15,7 @@ import scala.collection.mutable.HashSet
 import scala.collection.mutable.TreeSet
 import scala.util.control.Breaks.break
 import scala.util.Sorting
+import scala.math.sqrt
 
 object price_data {
 
@@ -31,14 +32,14 @@ object price_data {
         val lastts1 = timestamps1(l1-1)
         val lastts2 = timestamps2(l2-1)
         val totalTime = min(lastts1, lastts2)
-        
+
         var isFirstLonger = true
         if (lastts2 > lastts1){
             isFirstLonger = false
         }
 
         var area = 0.0
-        
+
         var shorterTS = Array.empty[Int]
         var longerTS = Array.empty[Int]
         var shorterP = Array.empty[Double]
@@ -55,7 +56,6 @@ object price_data {
             shorterP = prices1
             longerP = prices2
         }
-        
         var ts1 = 0
         var ts2 = 0
         var p1 = 0.0
@@ -71,22 +71,27 @@ object price_data {
 
         var cslope1 = p1_temp / nts1
         var cslope2 = p2_temp / nts2
+        var prev_slope1 = 0.0
+        var prev_slope2 = 0.0
+
+        println(p1_temp)
+        println(nts1)
 
         var indexLonger = 1
-
         val ll = shorterTS.length
         for (ii <- 0 to ll -2){
+            prev_slope1 = cslope1
+            cslope1 = (shorterP(ii+1) - shorterP(ii)) / (shorterTS(ii+1) - shorterTS(ii))
             while (longerTS(indexLonger) < shorterTS(ii + 1)){
-                // going from index 1 up
+                prev_slope2 = cslope2
+                cslope2 = (longerP(indexLonger+1) - longerP(indexLonger)) / (longerTS(indexLonger+1) - longerTS(indexLonger))
                 cts_temp = longerTS(indexLonger)
                 p1_temp = p1 + cslope1 * (cts_temp - cts)
                 p2_temp = longerP(indexLonger)
-                cslope2 = ( p2_temp - p2) / ( cts_temp - cts   )
-                //println(cslope1)
                 if (signum(p1_temp - p2_temp) == signum(p1 - p2)){
-                    area += .5 * (abs(p1 - p1_temp) + abs(p2 - p2_temp)) * (cts_temp - cts)
+                    area += .5 * (abs(p2_temp - p1_temp) + abs(p2 - p1)) * (cts_temp - cts)
                 }else{
-                    val midpoint = cts + abs(p1 - p2) / abs(cslope1 + cslope2)
+                    val midpoint = cts + abs(p1 - p2) / abs(cslope1 + prev_slope2)
                     area += .5 * (midpoint - cts) * abs(p1 - p2)
                     area += .5 * (cts_temp - midpoint) * abs(p1_temp - p2_temp)
                 }
@@ -95,33 +100,33 @@ object price_data {
                 cts = cts_temp
                 indexLonger += 1
             }
-            cslope2 = (longerP(indexLonger) - p2) / (longerTS(indexLonger) - cts)
             cts_temp = shorterTS(ii+1)
             p2_temp = p2 + cslope2 * (cts_temp - cts )
             p1_temp = shorterP(ii+1)
-            cslope1 = (p1_temp - p1) / (cts_temp - cts)
             if (signum(p1_temp - p2_temp) == signum(p1 - p2)){
-                area += .5 * (abs(p1 - p1_temp) + abs(p2 - p2_temp)) * (cts_temp - cts)
+                area += .5 * (abs(p2_temp - p1_temp) + abs(p2 - p1)) * (cts_temp - cts)
             }else{
                 val midpoint = cts + abs(p1 - p2) / abs(cslope1 + cslope2)
                 area += .5 * (midpoint - cts) * abs(p1 - p2)
                 area += .5 * (cts_temp - midpoint) * abs(p1_temp - p2_temp)
             }
+            cts = cts_temp;
+            p1 = p1_temp
+            p2 = p2_temp
 
         }
 
-       return area / ( totalTime.toDouble ) * 1000
+       return area / ( totalTime.toDouble )
 
     }
 
-
-
    def main(args: Array[String]){
+        println(args(0))
         val conf = new SparkConf().setAppName("PriceDataExercise").set("spark.cassandra.connection.host", "52.41.153.121")
         val sc = new SparkContext(conf)
         val cc = new CassandraSQLContext(sc)
-   	    val prices = sc.cassandraTable("fx","batch_table").select("price").where("batch_id = 1").map(s => s.get[Double]("price")).toArray
-	    val timestamps = sc.cassandraTable("fx","batch_table").select("ts").where("batch_id = 1").map(s => s.get[Long]("ts")).toArray
+   	    val prices = sc.cassandraTable("fx","batch_table").select("price").where("batch_id = " + args(0)).map(s => s.get[Double]("price")).toArray
+	    val timestamps = sc.cassandraTable("fx","batch_table").select("ts").where("batch_id = " + args(0)).map(s => s.get[Long]("ts")).toArray
 
         val num_anchors = 15
 
@@ -147,7 +152,7 @@ object price_data {
             val lastVal = btime.value(aa)
             var startInd = 0
             var iii = aa
-            while (iii >= 0 && btime.value(iii) > lastVal - 3600000){
+            while (iii >= 0 && btime.value(iii) > lastVal - 600000){
                 iii -= 1
             }
 
@@ -159,11 +164,16 @@ object price_data {
             val slicedArrayTS = btime.value.slice(startInd, aa + 1)
             val slicedArrayP = bprice.value.slice(startInd, aa + 1)           
 
+//            val mean_ = slicedArrayP.sum/slicedArrayP.length
+//            val std_ = sqrt((slicedArrayP.map( _ - mean_).map(t => t*t).sum)/slicedArrayP.length)
+
             var slicedIntArrayTS = new Array[Int](slicedArrayTS.length)
+            var start_value = slicedArrayP(0)
+
             for (ii <- 0 to slicedArrayTS.length -1){
                 
                 slicedIntArrayTS(ii) = (slicedArrayTS(ii) - slicedArrayTS(0)).toInt
-                slicedArrayP(ii) = slicedArrayP(ii) - slicedArrayP(0)
+                slicedArrayP(ii) = (slicedArrayP(ii) - start_value) // std_
             }
             for (ii <- 0 to bnanchors.value - 1){
                 val a = get_area(slicedIntArrayTS, banchorTS.value(ii), slicedArrayP, banchorP.value(ii))
@@ -184,6 +194,9 @@ object price_data {
        for (a <- 0 to bnanchors.value -1){
         permutationResults.saveToCassandra("fx","permutation_granularity_" + a.toString, SomeColumns("ts", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14"))
        }
+
+       permutationResults.saveToCassandra("fx","ts_to_permutation", SomeColumns("ts", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14"))
+
 
             
 /*

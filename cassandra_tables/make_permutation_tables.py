@@ -41,7 +41,12 @@ for i in range(n_vars):
     stmt += ')),)'
     print(stmt)
     permutation_tables[i] = stmt
-    session.execute(stmt)
+    while True:
+        try:
+            session.execute(stmt)
+        except:
+            continue
+        break
 
 
 session.execute(ts_to_permutation)
