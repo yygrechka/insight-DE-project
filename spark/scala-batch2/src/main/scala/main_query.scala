@@ -122,7 +122,7 @@ object price_data {
 
    def main(args: Array[String]){
         println(args(0))
-        val conf = new SparkConf().setAppName("PriceDataExercise").set("spark.cassandra.connection.host", "52.41.153.121")
+        val conf = new SparkConf().setAppName("PriceDataExercise").set("spark.cassandra.connection.host", "52.39.13.76")
         val sc = new SparkContext(conf)
         val cc = new CassandraSQLContext(sc)
    	    val prices = sc.cassandraTable("fx","batch_table").select("price").where("batch_id = " + args(0)).map(s => s.get[Double]("price")).toArray
@@ -190,12 +190,18 @@ object price_data {
                             (btime.value(a),x(0)._2,x(1)._2,x(2)._2,x(3)._2,x(4)._2,x(5)._2,x(6)._2,x(7)._2,x(8)._2,x(9)._2,x(10)._2,x(11)._2,x(12)._2,x(13)._2,x(14)._2)}
 
                 ) 
+        val distResults = rddTest.map( 
+                    a =>{ val x = ff(a) 
+                            (btime.value(a),x(0)._1,x(1)._1,x(2)._1,x(3)._1,x(4)._1,x(5)._1,x(6)._1,x(7)._1,x(8)._1,x(9)._1,x(10)._1,x(11)._1,x(12)._1,x(13)._1,x(14)._1)}
 
+                ) 
        for (a <- 0 to bnanchors.value -1){
         permutationResults.saveToCassandra("fx","permutation_granularity_" + a.toString, SomeColumns("ts", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14"))
        }
 
        permutationResults.saveToCassandra("fx","ts_to_permutation", SomeColumns("ts", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14"))
+
+       distResults.saveToCassandra("fx","ts_to_distance", SomeColumns("ts", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14"))
 
 
             
