@@ -2,6 +2,7 @@
 
 ### Real time Approximate Nearest Neighbor on EUR/USD data.
 www.yygrechka.website
+
 http://www.slideshare.net/YevgeniyGrechka/similarity-series
 
 Similar Series is a proof of concept of a technology that allows traders and financial researchers to find points in time in the past when the price pattern was similar to what it is at this moment. The following technologies were used in the project:
