@@ -122,7 +122,7 @@ object price_data {
 
 
     def main(args: Array[String]){
-        val conf = new SparkConf().setAppName("PriceDataExercise").set("spark.cassandra.connection.host", "52.41.153.121")
+        val conf = new SparkConf().setAppName("PriceDataExercise").set("spark.cassandra.connection.host", "52.39.13.76")
         val sc = new SparkContext(conf)
 
         val num_anchors = 15
