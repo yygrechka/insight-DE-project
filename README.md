@@ -19,3 +19,9 @@ Similar series allows the user to issue real time nearest neighbor queries. The 
 The website demonstrates the real-time approximate nearest neighbor technology. The top grath represents the query interval, or the latest 10 minutes of the EUR-USD prices. The folowing graph shows the nearest neighbor that was computed with my algorithm. The third graph shows the difference between the two above graphs. It highlights the area between them, which I use for my measure of distance.
 
 ### Relavent Metrics
+
+I used the area between the curves as my distance metric. Although I considered some more esoteric metrics, I decided that the area-distance would work just fine to demonstrate the technology. Its other advantage is that it is very easy to visualize. 
+
+The Second metric I used was a comparison of how the found distance compared to a distribution of distances between random 10-minute series intervals. This is a crude measure of how good the LSH method is at finding an approximate nearest neighbor, but it is sufficient for a proof of concept.
+
+
