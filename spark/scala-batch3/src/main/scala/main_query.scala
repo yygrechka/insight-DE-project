@@ -18,8 +18,9 @@ import scala.util.control.Breaks.break
 import scala.util.Sorting
 
 object price_data {
+
+    // defining the distance function
         def get_area(timestamps1 : Array[Int], timestamps2 : Array[Int], prices1 : Array[Double], prices2 : Array[Double]) : Double = {
-        // the first element is assumed to be 0
         val l1 = timestamps1.length
         val l2 = timestamps2.length
         if (l1 < 2 ){
@@ -133,9 +134,6 @@ object price_data {
             anchorP(i) = sc.cassandraTable("fx","anchor_table").select("price").where("anchor = " + i.toString).map(s => s.get[Double]("price")).toArray
         }
 
-//        val banchorTS = sc.broadcast(anchorTS)
-//        val banchorP = sc.broadcast(anchorP)
-//        val bnanchors = sc.broadcast(num_anchors)
 
         def ff(ts : Array[Int], prices: Array[Double]) : Array[(Double,Int)] ={
             val final_ = Array.fill[(Double,Int)](num_anchors)((0.0,0))
@@ -148,7 +146,7 @@ object price_data {
             return final_
         }
 
-
+// Continuously querying the most recent timestamp
 
         while (true){
             val lastTS_ = sc.cassandraTable("fx","last_ts").select("ts").map(s => s.get[Long]("ts")).toArray
@@ -167,8 +165,6 @@ object price_data {
             val ts_combined_int = new Array[Int](ts_combined.length)
             val p_combined = p1 ++ p2
             
-      //      val mean_ = p_combined.sum/p_combined.length
-      //      val std_ = sqrt((p_combined.map( _ - mean_).map(t => t*t).sum)/p_combined.length)
             val start_value = p_combined(0)
 
             for (ii <- 0 to ts_combined.length -1){
@@ -179,8 +175,8 @@ object price_data {
             }
             
             val xx = ff(ts_combined_int, p_combined)
-//            xx.foreach(println)
-//            Thread.sleep(100000)
+
+// Writing to carrandra tables
 
             val permutation = sc.parallelize(Array(ff(ts_combined_int, p_combined))).map(x => (1,lastTS,x(0)._2,x(1)._2,x(2)._2,x(3)._2,x(4)._2,x(5)._2,x(6)._2,x(7)._2,x(8)._2,x(9)._2,x(10)._2,x(11)._2,x(12)._2,x(13)._2,x(14)._2))
             permutation.saveToCassandra("fx","last_ts_permutation", SomeColumns("const", "ts", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14"))
@@ -201,10 +197,6 @@ object price_data {
         
        
 
-               /*while (true){
-            Thread sleep(1000)
-            println("hi")
-        }*/
     }
 
 

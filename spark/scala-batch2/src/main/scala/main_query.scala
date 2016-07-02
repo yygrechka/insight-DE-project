@@ -19,8 +19,9 @@ import scala.math.sqrt
 
 object price_data {
 
+// defining the area
+
     def get_area(timestamps1 : Array[Int], timestamps2 : Array[Int], prices1 : Array[Double], prices2 : Array[Double]) : Double = {
-        // the first element is assumed to be 0
         val l1 = timestamps1.length
         val l2 = timestamps2.length
         if (l1 < 2 ){
