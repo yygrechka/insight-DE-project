@@ -24,4 +24,13 @@ I used the area between the curves as my distance metric. Although I considered 
 
 The Second metric I used was a comparison of how the found distance compared to a distribution of distances between random 10-minute series intervals. This is a crude measure of how good the LSH method is at finding an approximate nearest neighbor, but it is sufficient for a proof of concept.
 
+### LSH Idea
 
+The idea for this specific flavor of LSH comes from the paper "On Locality-sensitive Indexing in Generic Metric Spaces" (Novak 2010). The idea is as follows: a set of 10-minute intervals is chosen from the data set; these will be called pivot points. In my case this set was chosen randomly, but there are better ways to make this selection. Then for a given 10-minute series interval I compute the distance to each one of the pivot points and order these distances in increasing order. This will define a permutation of the pivot points; and we subsequently search our collection of permutations which we have found for each 10-minute series interval in our data set and find the closest match.
+
+### Cassandra Tables Schema to structure 
+
+
+### Data Pipeline
+
+My pipeline uses Kafka to ingest data from www.truefx.com. This website provides both historical and real time foreign exchange bid/offer prices. 
