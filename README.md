@@ -21,7 +21,7 @@ Similar series allows the user to issue real time nearest neighbor queries. The 
 The website demonstrates the real-time approximate nearest neighbor technology. The top grath represents the query interval, or the latest 10 minutes of the EUR-USD prices. The folowing graph shows the nearest neighbor that was computed with my algorithm. The third graph shows the difference between the two above graphs. It highlights the area between them, which I use for my measure of distance.
 
 <p align="center">
-<img src="/images/website_layout.png" width="450"/>
+<img src="/images/website_layout.png" width="650"/>
 </p>
 
 ### Relavent Metrics
@@ -57,5 +57,5 @@ This design allowed me to do spark batch processing of the data very efficiently
 My pipeline uses Kafka to ingest data from www.truefx.com. This website provides both historical and real time foreign exchange bid/offer prices. The data is then put into Cassandra, and Spark is used to process the data as described above. The approximate nearest neighbor is then served up for the current price series using flask.
 
 <p align="center">
-<img src="/images/pipeline.png" width="450"/>
+<img src="/images/pipeline.png" width="750"/>
 </p>
