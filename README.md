@@ -42,4 +42,4 @@ This design allowed me to do spark batch processing of the data very efficiently
 
 ### Data Pipeline
 
-My pipeline uses Kafka to ingest data from www.truefx.com. This website provides both historical and real time foreign exchange bid/offer prices. 
+My pipeline uses Kafka to ingest data from www.truefx.com. This website provides both historical and real time foreign exchange bid/offer prices. The data is then put into Cassandra, and Spark is used to process the data as described above. The approximate nearest neighbor is then served up for the current price series using flask.
