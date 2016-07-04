@@ -7,6 +7,8 @@ cluster = Cluster(['52.41.153.121'])
 session = cluster.connect('fx')
 
 
+#Creating the pivot points
+
 file1 = sys.argv[1]
 
 pattern = '%Y%m%d %H:%M:%S.%f'

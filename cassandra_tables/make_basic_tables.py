@@ -3,6 +3,7 @@ from cassandra.cluster import Cluster
 cluster = Cluster(['52.41.153.121'])
 session = cluster.connect('fx')
 
+#Creating basic tables
 
 try:
 	session.execute('DROP TABLE batch_table')

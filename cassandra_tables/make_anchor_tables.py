@@ -4,6 +4,7 @@ import sys
 cluster = Cluster(['52.41.153.121'])
 session = cluster.connect('fx')
 
+#Creating pivot tables
 
 try:
     session.execute('DROP TABLE anchor_table;')

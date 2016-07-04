@@ -4,6 +4,10 @@ import sys
 cluster = Cluster(['52.41.153.121'])
 session = cluster.connect('fx')
 
+#Creating tables that store all the permutations, these are the tables 
+#that will be required for fast queries.
+
+
 n_vars = int(sys.argv[1])
 
 permutation_tables = [None] * n_vars

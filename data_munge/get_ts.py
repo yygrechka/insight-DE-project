@@ -6,6 +6,9 @@ import numpy as np
 cluster = Cluster(['52.41.153.121'])
 session = cluster.connect('fx')
 
+#Script to input historical data into the cassandra database
+#as a preprocessing step for spark.
+
 
 file1 = sys.argv[1]
 

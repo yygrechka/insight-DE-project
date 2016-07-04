@@ -2,6 +2,7 @@ import sys
 
 n_args = sys.argv[1]
 
+#Script to automate writing scala code in a few situations.
 
 hour = 'hour'
 ts = 'last_ts_rdd'
