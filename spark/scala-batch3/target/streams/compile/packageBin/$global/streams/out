@@ -10,6 +10,8 @@
 [0m[[0mdebug[0m] [0m	  /home/ubuntu/insight-DE-project/spark/scala-batch3/target/scala-2.10/classes/AnchorContext.class[0m
 [0m[[0mdebug[0m] [0m	FXHashTree.class[0m
 [0m[[0mdebug[0m] [0m	  /home/ubuntu/insight-DE-project/spark/scala-batch3/target/scala-2.10/classes/FXHashTree.class[0m
+[0m[[0mdebug[0m] [0m	price_data$$anonfun$main$4.class[0m
+[0m[[0mdebug[0m] [0m	  /home/ubuntu/insight-DE-project/spark/scala-batch3/target/scala-2.10/classes/price_data$$anonfun$main$4.class[0m
 [0m[[0mdebug[0m] [0m	FXHashTree$$anonfun$_get$1.class[0m
 [0m[[0mdebug[0m] [0m	  /home/ubuntu/insight-DE-project/spark/scala-batch3/target/scala-2.10/classes/FXHashTree$$anonfun$_get$1.class[0m
 [0m[[0mdebug[0m] [0m	price_data$$anonfun$ff$1$1.class[0m
@@ -48,6 +50,8 @@
 [0m[[0mdebug[0m] [0m	  /home/ubuntu/insight-DE-project/spark/scala-batch3/target/scala-2.10/classes/price_data$$typecreator2$1.class[0m
 [0m[[0mdebug[0m] [0m	price_data$$anonfun$8.class[0m
 [0m[[0mdebug[0m] [0m	  /home/ubuntu/insight-DE-project/spark/scala-batch3/target/scala-2.10/classes/price_data$$anonfun$8.class[0m
+[0m[[0mdebug[0m] [0m	price_data$$anonfun$main$3.class[0m
+[0m[[0mdebug[0m] [0m	  /home/ubuntu/insight-DE-project/spark/scala-batch3/target/scala-2.10/classes/price_data$$anonfun$main$3.class[0m
 [0m[[0mdebug[0m] [0m	DataPoint.class[0m
 [0m[[0mdebug[0m] [0m	  /home/ubuntu/insight-DE-project/spark/scala-batch3/target/scala-2.10/classes/DataPoint.class[0m
 [0m[[0mdebug[0m] [0m	price_data$$anonfun$2.class[0m

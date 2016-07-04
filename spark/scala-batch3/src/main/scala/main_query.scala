@@ -173,21 +173,31 @@ object price_data {
 
                 ts_combined_int(ii) = x.toInt 
             }
-            
+
+            try{            
             val xx = ff(ts_combined_int, p_combined)
+            xx.foreach(println)
 
 // Writing to carrandra tables
+            var _sum = 0.0;
+            for (a <- 0 to 14){
+                _sum = _sum +  abs(xx(a)._1)
+            }
+            if (_sum < 50){
 
-            val permutation = sc.parallelize(Array(ff(ts_combined_int, p_combined))).map(x => (1,lastTS,x(0)._2,x(1)._2,x(2)._2,x(3)._2,x(4)._2,x(5)._2,x(6)._2,x(7)._2,x(8)._2,x(9)._2,x(10)._2,x(11)._2,x(12)._2,x(13)._2,x(14)._2))
-            permutation.saveToCassandra("fx","last_ts_permutation", SomeColumns("const", "ts", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14"))
+                val permutation = sc.parallelize(Array(xx)).map(x => (1,lastTS,x(0)._2,x(1)._2,x(2)._2,x(3)._2,x(4)._2,x(5)._2,x(6)._2,x(7)._2,x(8)._2,x(9)._2,x(10)._2,x(11)._2,x(12)._2,x(13)._2,x(14)._2))
+                 val pp2 = permutation.map( x => (x._2,x._3,x._4,x._5,x._6,x._7,x._8,x._9,x._10,x._11,x._12,x._13,x._14,x._15,x._16,x._17))
+
+                
+                permutation.saveToCassandra("fx","last_ts_permutation", SomeColumns("const", "ts", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14"))
+                pp2.saveToCassandra("fx","ts_to_permutation", SomeColumns("ts", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14"))
 
 
-            val pp2 = permutation.map( x => (x._2,x._3,x._4,x._5,x._6,x._7,x._8,x._9,x._10,x._11,x._12,x._13,x._14,x._15,x._16,x._17))
-            pp2.saveToCassandra("fx","ts_to_permutation", SomeColumns("ts", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14"))
-
-
-            Thread.sleep(1000)
-
+                Thread.sleep(1000)
+            }
+            } catch {
+                case e: Exception => println("Exception : " + e)
+            }
 
         }
         

@@ -117,7 +117,7 @@ object price_data {
 
         }
 
-       return area / ( totalTime.toDouble )
+       return area / ( totalTime.toDouble ) * 1000
 
     }
 
@@ -196,6 +196,17 @@ object price_data {
                             (btime.value(a),x(0)._1,x(1)._1,x(2)._1,x(3)._1,x(4)._1,x(5)._1,x(6)._1,x(7)._1,x(8)._1,x(9)._1,x(10)._1,x(11)._1,x(12)._1,x(13)._1,x(14)._1)}
 
                 ) 
+
+        val debugResults =  rddTest.map(
+            a => { val x = ff(a)
+                    var y : Long = 0;
+                    if (x(0)._1 > 10){
+                        y = btime.value(a)
+                    }
+                    (y,x(0)._1) }
+
+   )
+
        for (a <- 0 to bnanchors.value -1){
         permutationResults.saveToCassandra("fx","permutation_granularity_" + a.toString, SomeColumns("ts", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14"))
        }
@@ -204,7 +215,7 @@ object price_data {
 
        distResults.saveToCassandra("fx","ts_to_distance", SomeColumns("ts", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14"))
 
-
+        debugResults.saveToCassandra("fx","debugger",SomeColumns("ts","max_d"))
             
 /*
             for (ii <- 1 to btime.value.length-1){
