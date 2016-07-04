@@ -1,1 +1,1 @@
-/usr/local/spark/bin/spark-submit --packages org.apache.spark:spark-streaming-kafka_2.10:1.6.1,TargetHolding/pyspark-cassandra:0.3.5  --conf spark.cassandra.connection.host=52.39.13.76 spark_cassandra.py localhost:2181 FX_test
+/usr/local/spark/bin/spark-submit --packages org.apache.spark:spark-streaming-kafka_2.10:1.6.1,TargetHolding/pyspark-cassandra:0.3.5  --conf spark.cassandra.connection.host=52.39.13.76 spark_streaming.py localhost:2181 FX_test

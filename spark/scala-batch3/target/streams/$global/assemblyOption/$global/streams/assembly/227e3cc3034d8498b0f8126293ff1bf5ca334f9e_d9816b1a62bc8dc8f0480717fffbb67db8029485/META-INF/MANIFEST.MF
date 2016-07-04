@@ -1,9 +1,0 @@
-Manifest-Version: 1.0
-Implementation-Vendor: net.debasishg
-Implementation-Title: RedisClient
-Implementation-Version: 3.0
-Implementation-Vendor-Id: net.debasishg
-Specification-Vendor: net.debasishg
-Specification-Title: RedisClient
-Specification-Version: 3.0
-
